@@ -11,7 +11,7 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
     private readonly IBookingRepository _bookingRepository = bookingRepository;
     private readonly IEventInfoRepository _eventInfoRepository = eventInfoRepository;
 
-    public async Task<ServiceResult<Booking>> AddBookingAsync(BookingForm form)
+    public async Task<ServiceResult<Booking>> AddBookingAsync(BookingForm form, string email, string customerId)
     {
         try
         {
@@ -24,7 +24,7 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
                 return ServiceResult<Booking>.Conflict("There is not enough tickets left to fullfill this booking");
             }
 
-            var entity = new BookingEntity { EventId = form.EventId, EventPackageId = form.EventPackageId, CustomerId = form.CustomerId, CustomerEmail = form.CustomerEmail, AmountOfTickets = form.AmountOfTickets, PriceToPay = form.PriceToPay};
+            var entity = new BookingEntity { EventId = form.EventId, EventPackageId = form.EventPackageId, CustomerId = customerId, CustomerEmail = email, AmountOfTickets = form.AmountOfTickets, PriceToPay = form.PriceToPay};
             var createdEntity = await _bookingRepository.Create(entity);
             if (createdEntity is null) return ServiceResult<Booking>.Error("failed to book event");
 
@@ -86,7 +86,22 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
         }
     }
 
-    public async Task<ServiceResult<Booking>> UpdateBookingAsync(int id, BookingForm form)
+    public async Task<ServiceResult<IEnumerable<Booking>>> GetBookingsAsync(string customerId)
+    {
+        try
+        {
+            var entities = await _bookingRepository.FilterBookingsByCustomerId(customerId);
+            var bookings = entities.Select(x => new Booking { Id = x.Id, EventId = x.EventId, EventPackageId = x.EventPackageId, CustomerId = x.CustomerId, CustomerEmail = x.CustomerEmail, AmountOfTickets = x.AmountOfTickets, PriceToPay = x.PriceToPay, BookedAt = x.BookedAt }).ToList();
+            return ServiceResult<IEnumerable<Booking>>.Ok(bookings);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            return ServiceResult<IEnumerable<Booking>>.Error("failed to fetch bookings");
+        }
+    }
+
+    public async Task<ServiceResult<Booking>> UpdateBookingAsync(int id, BookingForm form, string email, string customerId)
     {
         try
         {
@@ -112,7 +127,7 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
             var updatedEntity = await _bookingRepository.Update(entity);
             if (updatedEntity is null) return ServiceResult<Booking>.Error("failed to update booking");
 
-            var booking = new Booking { Id = updatedEntity.Id, EventId = updatedEntity.EventId, EventPackageId = updatedEntity.EventPackageId, CustomerId = updatedEntity.CustomerId, CustomerEmail = updatedEntity.CustomerEmail, AmountOfTickets = updatedEntity.AmountOfTickets, PriceToPay = updatedEntity.PriceToPay, BookedAt = updatedEntity.BookedAt };
+            var booking = new Booking { Id = updatedEntity.Id, EventId = updatedEntity.EventId, EventPackageId = updatedEntity.EventPackageId, CustomerId = customerId, CustomerEmail = email, AmountOfTickets = updatedEntity.AmountOfTickets, PriceToPay = updatedEntity.PriceToPay, BookedAt = updatedEntity.BookedAt };
             return ServiceResult<Booking>.Ok(booking);
 
         }

@@ -10,7 +10,7 @@ public class Booking
 
     public int? EventPackageId { get; set; }
 
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; } = null!;
 
     public string CustomerEmail { get; set; } = null!;
 

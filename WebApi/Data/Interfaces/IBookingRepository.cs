@@ -7,4 +7,6 @@ public interface IBookingRepository : IRepository<BookingEntity>
     public int CountBookings(int eventId);
 
     public Task<IEnumerable<BookingEntity>> FilterBookingsByEventId(int eventId);
+
+    public Task<IEnumerable<BookingEntity>> FilterBookingsByCustomerId(string customerId);
 }

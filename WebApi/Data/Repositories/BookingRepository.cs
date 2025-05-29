@@ -17,4 +17,8 @@ public class BookingRepository(ApplicationDbContext context) : Repository<Bookin
     {
         return await _context.Bookings.Where(x => x.EventId == eventId).ToListAsync();
     }
+    public async Task<IEnumerable<BookingEntity>> FilterBookingsByCustomerId(string customerId)
+    {
+        return await _context.Bookings.Where(x => x.CustomerId == customerId).ToListAsync();
+    }
 }

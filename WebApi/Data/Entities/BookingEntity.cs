@@ -13,7 +13,8 @@ public class BookingEntity
 
     public int? EventPackageId { get; set; }
 
-    public int CustomerId { get; set; }
+    [Column(TypeName = "varchar(750)")]
+    public string CustomerId { get; set; } = null!;
 
     [Column(TypeName = "varchar(250)")]
     public string CustomerEmail { get; set; } = null!;
