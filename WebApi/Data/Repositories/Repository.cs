@@ -1,103 +1,71 @@
-﻿using Microsoft.Azure.Cosmos;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.Linq.Expressions;
 using WebApi.Data.Interfaces;
 
 namespace WebApi.Data.Repositories;
 
-public abstract class Repository<TModel> : IRepository<TModel> where TModel : class
+public class Repository<TEntity>(DbContext context) : IRepository<TEntity> where TEntity : class
 {
-    public readonly IConfiguration _configuration;
-    public CosmosClient _client;
-    public Database _db;
-    public Container _container;
-    public Repository(IConfiguration configuration)
-    {
-        _configuration = configuration;
-        _client = new(_configuration["CosmosDb:Endpoint"], _configuration["CosmosDb:PrimaryKey"]);
-        _db = _client.GetDatabase(_configuration["CosmosDb:Database"]);
-        _container = _db.GetContainer("bookings");
-    }
-
-    public virtual async Task<TModel> CreateAsync(TModel model)
+    private readonly DbContext _dbContext = context;
+    private readonly DbSet<TEntity> _table = context.Set<TEntity>();
+    public virtual async Task<TEntity> Create(TEntity entity)
     {
         try
         {
-            ItemResponse<TModel> response = await _container.CreateItemAsync(model);
-            return response;
+            await _table.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity;
+
         } catch (Exception ex)
         {
             Debug.WriteLine(ex.Message);
             return null!;
         }
     }
-
-    public virtual async Task<bool> DeleteAsync(string id, string partitionKey)
+    public virtual async Task<TEntity> Get(Expression<Func<TEntity, bool>> predicate)
     {
+        return await _table.FirstOrDefaultAsync(predicate) ?? null!;
+    }
+
+    public virtual async Task<IEnumerable<TEntity>> GetAll()
+    {
+        return await _table.ToListAsync();
+    }
+
+    public virtual async Task<TEntity> Update(TEntity entity)
+    {
+        if (entity is null) return null!;
         try
         {
-            await _container.DeleteItemAsync<TModel>(id, new PartitionKey(partitionKey));
+            _table.Update(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            return null!;
+        }
+    }
+
+    public virtual async Task<bool> Delete(TEntity entity)
+    {
+        if (entity == null) return false;
+        try
+        {
+
+            _table.Remove(entity);
+            await _dbContext.SaveChangesAsync();
             return true;
         }
-        catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (Exception ex)
         {
+            Debug.WriteLine(ex.Message);
             return false;
-        }
-    }
-
-    public virtual async Task<IEnumerable<TModel>> GetAllAsync(Func<TModel, bool>? predicate)
-    {
-        try
-        {
-            IList<TModel> items = [];
-
-            FeedIterator<TModel> feedIterator = _container.GetItemQueryIterator<TModel>();
-
-            while (feedIterator.HasMoreResults)
-            {
-                FeedResponse<TModel> response = await feedIterator.ReadNextAsync();
-                foreach (TModel item in response)
-                {
-                    items.Add(item);
-                }
-            }
-
-            if(predicate != null)
-                items = items.Where(predicate).ToList();
-
-            return items;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex.Message);
-            return null!;
-        }
-    }
-
-    public virtual async Task<TModel> GetAsync(string key, string partitionKey)
-    {
-        try
-        {
-            ItemResponse<TModel> response = await _container.ReadItemAsync<TModel>(key, new PartitionKey(partitionKey));
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex.Message);
-            return null!;
-        }
-    }
-
-    public virtual async Task<TModel> UpdateAsync(TModel entity, string id, string partitionKey)
-    {
-        try
-        {
-            ItemResponse<TModel> response = await _container.ReplaceItemAsync<TModel>(entity, id, new PartitionKey(partitionKey));
-            return response;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex.Message);
-            return null!;
         }
     }
 }

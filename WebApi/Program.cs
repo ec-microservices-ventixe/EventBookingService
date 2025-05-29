@@ -1,20 +1,31 @@
+using Microsoft.EntityFrameworkCore;
+using WebApi.Data.Context;
 using WebApi.Data.Interfaces;
 using WebApi.Data.Repositories;
+using WebApi.Interfaces;
+using WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("db"));
+});
+
+builder.Services.AddGrpc();
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-
-builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<IEventInfoRepository, EventInfoRepository>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 var app = builder.Build();
 
+app.MapGrpcService<EventInfoGrpcService>();
 
 app.MapOpenApi();
 app.UseSwagger();
@@ -25,9 +36,6 @@ app.UseSwaggerUI(options =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

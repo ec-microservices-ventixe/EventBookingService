@@ -10,6 +10,7 @@ public class BookingForm
 
     public string CustomerEmail { get; set; } = null!;
 
-    public decimal AmountOfTickets { get; set; } = 1;
+    public int AmountOfTickets { get; set; } = 1;
 
+    public decimal PriceToPay { get; set; }
 }

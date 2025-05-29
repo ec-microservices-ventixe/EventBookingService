@@ -1,14 +1,16 @@
-﻿namespace WebApi.Data.Interfaces;
+﻿using System.Linq.Expressions;
 
-public interface IRepository<TModel> where TModel : class
+namespace WebApi.Data.Interfaces;
+
+public interface IRepository<TEntity> where TEntity : class
 {
-    public Task<TModel> CreateAsync(TModel entity);
+    public Task<TEntity> Create(TEntity entity);
 
-    public Task<TModel> GetAsync(string id, string partitionKey);
+    public Task<TEntity> Get(Expression<Func<TEntity, bool>> predicate);
 
-    public Task<IEnumerable<TModel>> GetAllAsync(Func<TModel, bool>? predicate);
+    public Task<IEnumerable<TEntity>> GetAll();
 
-    public Task<TModel> UpdateAsync(TModel entity, string key, string partitionKey);
+    public Task<TEntity> Update(TEntity entity);
 
-    public Task<bool> DeleteAsync(string id, string partitionKey);
+    public Task<bool> Delete(TEntity entity);
 }
