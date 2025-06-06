@@ -9,7 +9,7 @@ using WebApi.Models;
 namespace WebApi.Controllers;
 
 [ApiController]
-[Route(nameof(Controller))]
+[Route("bookings")]
 [Authorize]
 public class BookingController(IBookingService bookingService) : Controller
 {
@@ -36,7 +36,7 @@ public class BookingController(IBookingService bookingService) : Controller
         }
     }
 
-    [HttpGet("/all-bookings")]
+    [HttpGet("/bookings/all-bookings")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllBookings()
     {
@@ -53,7 +53,24 @@ public class BookingController(IBookingService bookingService) : Controller
         }
     }
 
-    [HttpGet("/customers-bookings")]
+    [HttpGet("/bookings/count-bookings")]
+    [AllowAnonymous]
+    public IActionResult CountBookings(int eventId)
+    {
+        try
+        {
+            var result = _bookingService.CountBookingsByEventAsync(eventId);
+            if (!result.Success) return StatusCode(result.StatusCode, result.ErrorMessage);
+            return Ok(result.Data);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(ex.Message);
+            return StatusCode(500, "Internal Error");
+        }
+    }
+
+    [HttpGet("/bookings/customers-bookings")]
     public async Task<IActionResult> GetCustomerBookings()
     {
         try
@@ -115,7 +132,10 @@ public class BookingController(IBookingService bookingService) : Controller
     {
         try
         {
-            var result = await _bookingService.DeleteBookingAsync(id);
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId is null) return Unauthorized();
+            var result = await _bookingService.DeleteBookingAsync(id, userId);
             if (!result.Success) return StatusCode(result.StatusCode, result.ErrorMessage);
             return NoContent();
         }

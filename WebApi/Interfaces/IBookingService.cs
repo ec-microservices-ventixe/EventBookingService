@@ -11,7 +11,9 @@ public interface IBookingService
 
     public Task<ServiceResult<IEnumerable<Booking>>> GetBookingsAsync(string customerId);
 
+    public ServiceResult<int> CountBookingsByEventAsync(int eventId);
+
     public Task<ServiceResult<Booking>> UpdateBookingAsync(int id, BookingForm form, string email, string customerId);
 
-    public Task<ServiceResult<bool>> DeleteBookingAsync(int id);
+    public Task<ServiceResult<bool>> DeleteBookingAsync(int id, string customerId);
 }

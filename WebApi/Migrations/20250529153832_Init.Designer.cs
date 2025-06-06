@@ -12,8 +12,8 @@ using WebApi.Data.Context;
 namespace WebApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250529132138_RemoveEventPackages")]
-    partial class RemoveEventPackages
+    [Migration("20250529153832_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,8 +43,9 @@ namespace WebApi.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(250)");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("varchar(750)");
 
                     b.Property<int>("EventId")
                         .HasColumnType("int");

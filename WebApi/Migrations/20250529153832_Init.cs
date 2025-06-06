@@ -19,7 +19,7 @@ namespace WebApi.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EventId = table.Column<int>(type: "int", nullable: false),
                     EventPackageId = table.Column<int>(type: "int", nullable: true),
-                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    CustomerId = table.Column<string>(type: "varchar(750)", nullable: false),
                     CustomerEmail = table.Column<string>(type: "varchar(250)", nullable: false),
                     AmountOfTickets = table.Column<int>(type: "int", nullable: false),
                     PriceToPay = table.Column<decimal>(type: "money", nullable: false),
@@ -28,19 +28,6 @@ namespace WebApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Bookings", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EventPackagesInfo",
-                columns: table => new
-                {
-                    PackackageId = table.Column<int>(type: "int", nullable: false),
-                    EventId = table.Column<int>(type: "int", nullable: false),
-                    TotalTickets = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EventPackagesInfo", x => x.PackackageId);
                 });
 
             migrationBuilder.CreateTable(
@@ -61,9 +48,6 @@ namespace WebApi.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Bookings");
-
-            migrationBuilder.DropTable(
-                name: "EventPackagesInfo");
 
             migrationBuilder.DropTable(
                 name: "EventsInfo");

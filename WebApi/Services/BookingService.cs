@@ -38,12 +38,13 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
         }
     }
 
-    public async Task<ServiceResult<bool>> DeleteBookingAsync(int id)
+    public async Task<ServiceResult<bool>> DeleteBookingAsync(int id, string customerId)
     {
         try
         {
             var entity = await _bookingRepository.Get(x => x.Id == id);
             if (entity is null) return ServiceResult<bool>.NotFound("Could not find booking");
+            if (entity.CustomerId != customerId) return ServiceResult<bool>.Unauthorized("You are not authorized");
             bool result = await _bookingRepository.Delete(entity);
             if (result == false) return ServiceResult<bool>.Error("failed to unbook event");
             return ServiceResult<bool>.NoContent();
@@ -71,6 +72,18 @@ public class BookingService(IBookingRepository bookingRepository, IEventInfoRepo
         }
     }
 
+    public ServiceResult<int> CountBookingsByEventAsync(int eventId)
+    {
+        try
+        {
+            int totalBooking = _bookingRepository.CountBookings(eventId);
+            return ServiceResult<int>.Ok(totalBooking);
+        } catch (Exception ex) {
+        
+            Debug.WriteLine(ex.Message);
+            return ServiceResult<int>.Error("failed to get the booking count for the event");
+        }
+    }
     public async Task<ServiceResult<IEnumerable<Booking>>> GetBookingsAsync()
     {
         try
